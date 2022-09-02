@@ -2,7 +2,6 @@ from PIL import Image
 import math
 from sklearn.cluster import KMeans
 import numpy as np
-import colorsys
 import glob
 
 
@@ -148,44 +147,17 @@ def generate_list(pixel_list, album_stack):
     return True
 
 
-def pixel_list_to_hsv(pixel_list):
-    lis = [[pixel_list[0][0], 0], [pixel_list[1][0], 0], [pixel_list[1][0], 0]]
-    for i in range(3):
-        lis[i][1] = colorsys.rgb_to_hsv(pixel_list[i][1][0]/255, pixel_list[i][1][1]/255, pixel_list[i][1][2]/255)
-        lis[i][1] = tuple([x * 100 for x in lis[i][1]])
-    return lis
 
-
-def find_hue(color):
-    hue = color[0][1][0]
-    for c in color:
-        if c[1][2] > 15 and c[1][1] > 6:
-            hue = c[1][0]
-            return hue
-    return 0
-
-
-def generate_list_2(album_stack):
-    edited_stack = []
-    for album in album_stack:
-        col = album[1]
-        color = find_hue(col)
-        edited_stack.append([color, album])
-    edited_stack.sort()
-    return edited_stack
 
 
 stack = []
 
 
 for file in glob.glob("albums/*.jpg"):
-     e = dom_colors(file)
+    e = dom_colors(file)
+    f = pick_three(e)
+    g = pixel_list_to_lab(f)
+    stack.append([file, g])
 
-     g = pixel_list_to_hsv(e)
-     stack.append([file, g])
 
-
-h = generate_list_2(stack)
-
-for album in h:
-    print(album)
+generate_list([[0.89444, (3.53861, 0.0, 0.0)], [0.10333, (100.0, 0.00874, 1e-05)], [0.00222, (78.22132, 2.47663, -1.38665)]], stack)
