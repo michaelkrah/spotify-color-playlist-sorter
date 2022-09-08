@@ -19,7 +19,7 @@ class SpotifyClient:
         url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
         response = self._place_get_api_request(url)
         response_json = response.json()
-        tracks = [Track(track["track"]["name"], track["track"]["id"], track["track"]["artists"][0]["name"]) for track in response_json["items"]]
+        tracks = [Track(track["track"]["name"], track["track"]["id"], track["track"]["artists"][0]["name"]) for track in response_json["tracks"]["items"]]
         return tracks
 
     def _place_get_api_request(self, url):
@@ -48,8 +48,9 @@ class SpotifyClient:
         return playlist
 
     def _place_post_api_request(self, url, data):
-        response = requests.get(
+        response = requests.post(
             url,
+            data=data,
             headers={
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {self.authorization_token}"
@@ -57,14 +58,22 @@ class SpotifyClient:
         )
         return response
 
-    def populate_playlist(self, playlist, tracks):
 
+    def populate_playlist(self, playlist_id, tracks):
         track_uris = [track.create_spotify_uri() for track in tracks]
-        data = json.dumps(track_uris)
-        url = f"https://api.spotify.com/v1/playlists/{playlist.id}/tracks"
-        response = self._place_post_api_request(url, data)
-        response_json = response.json()
-        return response_json
+        request_body = json.dumps({
+            "uris" : track_uris
+            })
+        endpoint_url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
+        # response = self._place_post_api_request(url, data)
+        # print(response)
+        # response_json = response.status_code
+        # print(response_json)
+        # return response_json
+        response = requests.post(url = endpoint_url, data = request_body, headers={"Content-Type":"application/json",
+                        "Authorization":f"Bearer {self.authorization_token}"})
+        print(response.status_code)
+        return response
 
 
 
