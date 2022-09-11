@@ -1,8 +1,11 @@
-from PIL import Image
-from sklearn.cluster import KMeans
-import numpy as np
 import colorsys
 import glob
+import requests
+import io
+
+import numpy as np
+from PIL import Image
+from sklearn.cluster import KMeans
 
 
 # From https://www.alanzucconi.com/2015/05/24/how-to-find-the-main-colours-in-an-image/
@@ -36,7 +39,7 @@ def centroid_histogram(clt):
 def pixel_list_to_hsv(pixel_list):
     lis = [[pixel_list[0][0], 0], [pixel_list[1][0], 0], [pixel_list[1][0], 0]]
     for i in range(3):
-        lis[i][1] = colorsys.rgb_to_hsv(pixel_list[i][1][0]/255, pixel_list[i][1][1]/255, pixel_list[i][1][2]/255)
+        lis[i][1] = colorsys.rgb_to_hsv(pixel_list[i][1][0] / 255, pixel_list[i][1][1] / 255, pixel_list[i][1][2] / 255)
         lis[i][1] = tuple([x * 100 for x in lis[i][1]])
     return lis
 
@@ -47,7 +50,7 @@ def find_hue(color):
         if c[1][2] > 15 and c[1][1] > 6:
             hue = c[1][0]
             return hue
-    return 0
+    return 1000
 
 
 def generate_list(album_stack):
@@ -56,20 +59,46 @@ def generate_list(album_stack):
         col = album[1]
         color = find_hue(col)
         edited_stack.append([color, album])
+    print(edited_stack)
     edited_stack.sort()
     return edited_stack
 
 
-stack = []
+def main(tracks):
+    stack = []
+
+    for file in glob.glob("albums/*.jpg"):
+        e = dom_colors(file)
+        g = pixel_list_to_hsv(e)
+        stack.append([file, g])
+
+    h = generate_list(stack)
+
+    for album in h:
+        print(album)
 
 
-for file in glob.glob("albums/*.jpg"):
-    e = dom_colors(file)
-    g = pixel_list_to_hsv(e)
-    stack.append([file, g])
+def color_sort_HSV(tracks):
+    """Takes a list of track objects as input, sorts them by HSV value, and returns the sorted list"""
+    stack = []
+    for track in tracks:
+        try:
+            URL = track.image[0]['url']
+        except IndexError:
+            print("No URL found")
+            continue
+        file = requests.get(URL, stream=True).raw
+        dom_col = dom_colors(file)
+        print(track.name, dom_col)
+        dom_col_hsv = pixel_list_to_hsv(dom_col)
+        stack.append([track, dom_col_hsv])
 
+    sorted_list = generate_list(stack)
 
-h = generate_list(stack)
+    stack_2 = []
+    for item in sorted_list:
+        stack_2.append(item[1][0])
 
-for album in h:
-    print(album)
+    print(stack_2)
+
+    return stack_2

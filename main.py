@@ -1,17 +1,20 @@
-
+import color_sorter_algo
 from spotify_client import *
 import os
 
 
 def main():
 
-    spotify_client = SpotifyClient(os.getenv("SPOTIFY_AUTHORIZATION_TOKEN"), "michaelkrah")
-    print(os.getenv("SPOTIFY_AUTHORIZATION_TOKEN"))
-    print(os.getenv("SPOTIFY_USER_ID"))
+    spotify_client = SpotifyClient(os.getenv("SPOTIFY_AUTHORIZATION_TOKEN"), os.getenv("USER_ID"))
 
-    tracks = spotify_client.get_playlist_tracks("1XW589QHysV2JIG2XzQORS?si=94e9e897d7334e93")
+    # playlist_id = spotify_client.get_playlist_id()
+    tracks = spotify_client.get_playlist_tracks("5yDChUYpXU27y963ForYXY")
 
-    result = spotify_client.populate_playlist("0vIocLhjLu02Z396pEYB4I?si=ac5fb86b49db4da6", tracks)
+    tracks_modified = color_sorter_algo.color_sort_HSV(tracks)
+
+    playlist = spotify_client.create_playlist("Hello 4")
+
+    result = spotify_client.populate_playlist(playlist.id, tracks_modified)
     print(result)
 
 

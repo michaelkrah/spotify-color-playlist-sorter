@@ -16,11 +16,35 @@ class SpotifyClient:
 
     def get_playlist_tracks(self, playlist_id):
 
-        url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
-        response = self._place_get_api_request(url)
+        offset = 0
+        tracks_total = []
+
+        url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks?limit=100&offset={offset}"
+        response = self.place_get_api_request(url)
+
         response_json = response.json()
-        tracks = [Track(track["track"]["name"], track["track"]["id"], track["track"]["artists"][0]["name"]) for track in response_json["tracks"]["items"]]
-        return tracks
+        total_tracks = response_json['total']
+        for i in range(0, (total_tracks//100) + 1):
+            url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks?limit=100&offset={offset}"
+            response = self.place_get_api_request(url)
+            response_json = response.json()
+            tracks = [Track(track["track"]["name"], track["track"]["id"], track["track"]["artists"][0]["name"], track["track"]["album"]["images"]) for track in response_json["items"]]
+            tracks_total += tracks
+            offset += 100
+        # used to be: tracks = [Track(track["track"]["name"], track["track"]["id"], track["track"]["artists"][0]["name"]) for track in response_json["tracks"]["items"]]
+        return tracks_total
+
+    def place_get_api_request(self, url):
+        print(url)
+        response = requests.get(
+            url,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.authorization_token}",
+
+            }
+        )
+        return response
 
     def _place_get_api_request(self, url):
         response = requests.get(
@@ -41,7 +65,6 @@ class SpotifyClient:
         url = f"https://api.spotify.com/v1/users/{self.user_id}/playlists"
         response = self._place_post_api_request(url, data)
         response_json = response.json()
-        print(response_json)
 
         playlist_id = response_json["id"]
         playlist = Playlist(name, playlist_id)
@@ -58,22 +81,25 @@ class SpotifyClient:
         )
         return response
 
-
     def populate_playlist(self, playlist_id, tracks):
-        track_uris = [track.create_spotify_uri() for track in tracks]
-        request_body = json.dumps({
-            "uris" : track_uris
-            })
-        endpoint_url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
-        # response = self._place_post_api_request(url, data)
-        # print(response)
-        # response_json = response.status_code
-        # print(response_json)
-        # return response_json
-        response = requests.post(url = endpoint_url, data = request_body, headers={"Content-Type":"application/json",
-                        "Authorization":f"Bearer {self.authorization_token}"})
-        print(response.status_code)
-        return response
+
+        offset = 0
+
+        for i in range(0, (len(tracks) // 100) + 1):
+            track_uris = [track.create_spotify_uri() for track in tracks[0+offset: 100 + offset]]
+            request_body = json.dumps({
+                "uris" : track_uris
+                })
+            print(type(request_body))
+            endpoint_url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
+            response = self._place_post_api_request(endpoint_url, request_body)
+            response_json = response.json()
+            offset += 100
+
+        return response_json
+        # response = requests.post(url = endpoint_url, data = request_body, headers={"Content-Type":"application/json",
+        #                 "Authorization":f"Bearer {self.authorization_token}"})
+        # return response
 
 
 
