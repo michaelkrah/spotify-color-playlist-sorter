@@ -8,7 +8,7 @@ def main():
     spotify_client = SpotifyClient(os.getenv("SPOTIFY_AUTHORIZATION_TOKEN"), os.getenv("USER_ID"))
 
     # playlist_id = spotify_client.get_playlist_id()
-    tracks = spotify_client.get_playlist_tracks("5yDChUYpXU27y963ForYXY")
+    tracks = spotify_client.get_playlist_tracks(os.getenv("PLAYLIST_ID"))
 
     tracks_modified = color_sorter_algo.color_sort_HSV(tracks)
 
