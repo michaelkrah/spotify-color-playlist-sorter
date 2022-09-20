@@ -1,7 +1,6 @@
 import colorsys
 import glob
 import requests
-import io
 
 import numpy as np
 from PIL import Image

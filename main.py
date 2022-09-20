@@ -12,7 +12,7 @@ def main():
 
     tracks_modified = color_sorter_algo.color_sort_HSV(tracks)
 
-    playlist = spotify_client.create_playlist("Chill, color sort 1")
+    playlist = spotify_client.create_playlist(". (2), color sort 1")
 
     result = spotify_client.populate_playlist(playlist.id, tracks_modified)
     print(result)

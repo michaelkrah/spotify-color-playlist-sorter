@@ -46,16 +46,6 @@ class SpotifyClient:
         )
         return response
 
-    def _place_get_api_request(self, url):
-        response = requests.get(
-            url,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.authorization_token}"
-            }
-        )
-        return response
-
     def create_playlist(self, name):
         data = json.dumps({
             "name": name,
@@ -63,14 +53,14 @@ class SpotifyClient:
             "public": True
         })
         url = f"https://api.spotify.com/v1/users/{self.user_id}/playlists"
-        response = self._place_post_api_request(url, data)
+        response = self.place_post_api_request(url, data)
         response_json = response.json()
 
         playlist_id = response_json["id"]
         playlist = Playlist(name, playlist_id)
         return playlist
 
-    def _place_post_api_request(self, url, data):
+    def place_post_api_request(self, url, data):
         response = requests.post(
             url,
             data=data,
@@ -88,11 +78,11 @@ class SpotifyClient:
         for i in range(0, (len(tracks) // 100) + 1):
             track_uris = [track.create_spotify_uri() for track in tracks[0+offset: 100 + offset]]
             request_body = json.dumps({
-                "uris" : track_uris
+                "uris": track_uris
                 })
             print(type(request_body))
             endpoint_url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
-            response = self._place_post_api_request(endpoint_url, request_body)
+            response = self.place_post_api_request(endpoint_url, request_body)
             response_json = response.json()
             offset += 100
 
