@@ -1,5 +1,4 @@
 import colorsys
-import glob
 import math
 
 import requests
@@ -10,12 +9,12 @@ from sklearn.cluster import KMeans
 
 
 # From https://www.alanzucconi.com/2015/05/24/how-to-find-the-main-colours-in-an-image/
-def dom_colors(file):
+def dom_colors(file, cluster_number=3):
     image = Image.open(file)
     image = image.resize((100, 100), resample=0)
     image = image.convert("RGB")
     pixels = list(image.getdata())
-    cluster = KMeans(n_clusters=3)
+    cluster = KMeans(n_clusters=cluster_number)
     cluster.fit(pixels)
     hist = centroid_histogram(cluster)
     zipped = list(zip(hist, cluster.cluster_centers_))
@@ -46,57 +45,46 @@ def pixel_list_to_hsv(pixel_list):
     return lis
 
 
-def find_hue(color):
-    hue = color[0][1][0]
-    for c in color:
-        if c[1][2] > 16 and c[1][1] > 6:
-            hue = c[1][0]
-            return hue
-    return 1000
-
-
-def find_hue_lum(color, step):
+def find_hue_lum(color, step, color_threshold):
+    threshold_met = False
     for col in color:
-        if col[1][2] > 20 and col[1][1] > 6:
+
+        if col[1][2] > 20 and col[1][1] > 15:
+            print(col)
 
             r, g, b = colorsys.hsv_to_rgb(col[1][0]/100, col[1][1]/100, col[1][2]/100)
             lum = math.sqrt(.241 * r + .691 * g + .068 * b )
 
-            h2 = int(col[1][0] * step)
-            lum2 = int(lum * step)
-            v2 = int(col[1][2] * step)
+            h2 = int(col[1][0]/100 * step)
+            v2 = int(col[1][2]/100 * step)
 
-            return (h2, lum2, v2)
+            if h2 % 2 == 1:
+                v2 = step - v2
+                lum = 1 - lum
 
-    return (1000, 1000, 1000)
+            if not threshold_met:
+                return (h2, lum, v2)
+            else:
+                return (h2 + step + 2, lum + step + 2, v2 + step + 2)
+        else:
+            if col[0] > color_threshold:
+
+                threshold_met = True
+
+    return (step + 2, step + 2, step + 2)
 
 
 def generate_list(album_stack):
     edited_stack = []
     for album in album_stack:
         col = album[1]
-        color = find_hue_lum(col, 8)
+        color = find_hue_lum(col, 15, .63)
         edited_stack.append([color, album[0]])
     edited_stack.sort()
-    print(edited_stack)
     return edited_stack
 
 
-# def main(tracks):
-#     stack = []
-#
-#     for file in glob.glob("albums/*.jpg"):
-#         e = dom_colors(file)
-#         g = pixel_list_to_hsv(e)
-#         stack.append([file, g])
-#
-#     h = generate_list(stack)
-#
-#     for album in h:
-#         print(album)
-
-
-def color_sort_HSV(tracks):
+def color_sort_HSV(tracks, cluster_number, starting_color):
     """Takes a list of track objects as input, sorts them by HSV value, and returns the sorted list"""
     stack = []
     for track in tracks:
@@ -108,7 +96,7 @@ def color_sort_HSV(tracks):
         print(URL)
         file = requests.get(URL, stream=True).raw
         try:
-            dom_col = dom_colors(file)
+            dom_col = dom_colors(file, cluster_number)
         except Exception:
             print("Unable to find colors")
             continue
@@ -117,9 +105,9 @@ def color_sort_HSV(tracks):
         stack.append([track, dom_col_hsv])
 
     sorted_list = generate_list(stack)
+    for i in sorted_list:
+        print(i)
 
-    stack_2 = []
-    for item in sorted_list:
-        stack_2.append(item[1])
+    sorted_list = [x[1] for x in sorted_list]
 
-    return stack_2
+    return sorted_list

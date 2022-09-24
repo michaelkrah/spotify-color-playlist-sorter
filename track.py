@@ -14,7 +14,8 @@ class Track:
     def __gt__(self, other):
         return True
 
-
+    def __repr__(self):
+        return f"{self.name} by {self.artist}"
 
     def __str__(self):
         return f"{self.name} by {self.artist}"
