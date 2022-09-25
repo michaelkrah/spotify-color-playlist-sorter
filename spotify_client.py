@@ -7,7 +7,7 @@ from playlist import Playlist
 
 
 class SpotifyClient:
-    """Uses API"""
+    """Object that can be used to access Spotify API"""
 
     def __init__(self, authorization_token, user_id):
 
@@ -23,6 +23,10 @@ class SpotifyClient:
         response = self.place_get_api_request(url)
 
         response_json = response.json()
+        if 'error' in response_json:
+            print("Error number:", response_json['error']['status'], " Message:", response_json['error']['message'])
+            print("Program stopping, check error message")
+            quit()
         total_tracks = response_json['total']
         for i in range(0, (total_tracks//100) + 1):
             url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks?limit=100&offset={offset}"
@@ -31,7 +35,6 @@ class SpotifyClient:
             tracks = [Track(track["track"]["name"], track["track"]["id"], track["track"]["artists"][0]["name"], track["track"]["album"]["images"]) for track in response_json["items"]]
             tracks_total += tracks
             offset += 100
-        # used to be: tracks = [Track(track["track"]["name"], track["track"]["id"], track["track"]["artists"][0]["name"]) for track in response_json["tracks"]["items"]]
         return tracks_total
 
     def place_get_api_request(self, url):
@@ -46,15 +49,19 @@ class SpotifyClient:
         )
         return response
 
-    def create_playlist(self, name):
+    def create_playlist(self, name, description):
         data = json.dumps({
             "name": name,
-            "description": "Color tracks",
+            "description": description,
             "public": True
         })
         url = f"https://api.spotify.com/v1/users/{self.user_id}/playlists"
         response = self.place_post_api_request(url, data)
         response_json = response.json()
+        if 'error' in response_json:
+            print("Error number:", response_json['error']['status'], " Message:", response_json['error']['message'])
+            print("Program stopping, check error message")
+            quit()
 
         playlist_id = response_json["id"]
         playlist = Playlist(name, playlist_id)
@@ -80,19 +87,9 @@ class SpotifyClient:
             request_body = json.dumps({
                 "uris": track_uris
                 })
-            print(type(request_body))
             endpoint_url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
             response = self.place_post_api_request(endpoint_url, request_body)
             response_json = response.json()
             offset += 100
 
         return response_json
-        # response = requests.post(url = endpoint_url, data = request_body, headers={"Content-Type":"application/json",
-        #                 "Authorization":f"Bearer {self.authorization_token}"})
-        # return response
-
-
-
-
-
-

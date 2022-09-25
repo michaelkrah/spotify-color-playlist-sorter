@@ -1,7 +1,7 @@
 
 
 class Playlist:
-    """playlist"""
+    """Playlist object, used to store name and id"""
 
     def __init__(self, name, id):
         self.name = name

@@ -1,5 +1,5 @@
 class Track:
-    """music"""
+    """Track object, stores a single spotify track along with its name, URI/id, artist, and image URL link"""
 
     def __init__(self, name, id, artist, image):
 
