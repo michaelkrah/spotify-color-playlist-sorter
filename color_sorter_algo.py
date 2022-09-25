@@ -119,7 +119,16 @@ def generate_list_hsv(album_stack, step, threshold, starting_color):
 
 
 def color_sort_hsv(tracks, cluster_number, starting_color):
-    """Takes a list of track objects as input, sorts them by HSV value, and returns the sorted list"""
+    """Takes a list of track objects as input, sorts them by HSV value, and returns the sorted list
+
+    :param tracks: A list of track objects
+    :type tracks: list
+    :param cluster_number: A number used to determine the number of clusters in K-means clustering
+    :type cluster_number: int
+    :param starting_color: An rgb color tuple that is used to determine what color hue the playlist will start with
+    :type starting_color: tuple
+    """
+
     stack = []
     for track in tracks:
         try:
