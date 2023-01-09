@@ -67,6 +67,7 @@ def find_hue_lum(color, step, color_frequency_threshold, starting_color):
     :type starting_color: tuple
     """
 
+    color_frequency_sum = 0
     threshold_met = False
     for col in color:
 
@@ -84,13 +85,15 @@ def find_hue_lum(color, step, color_frequency_threshold, starting_color):
                 v2 = step - v2
                 lum = 1 - lum
 
-            if not threshold_met:
+            if not threshold_met and not color_frequency_sum > color_frequency_threshold:
                 return (h2, lum, v2)
             else:
                 return (h2 + step + 2, lum + step + 2, v2 + step + 2)
         else:
-            if col[0] > color_frequency_threshold: # TODO change this so that it is the sum of the frequency of all previously tested colors (will fix when albums are half black, half white with small color
+            if col[0] > color_frequency_threshold:
                 threshold_met = True
+
+        color_frequency_sum += col[0]
 
     return (step + 2, step + 2, step + 2)
 
@@ -136,14 +139,13 @@ def color_sort_hsv(tracks, cluster_number, starting_color):
         except IndexError:
             print("No URL found")
             continue
-        print(URL)
         file = requests.get(URL, stream=True).raw
         try:
             dom_col = dom_colors(file, cluster_number)
         except Exception:
             print("Unable to find colors")
             continue
-        print(track.name)
+        print("Name:", track.name, "  Image:", URL)
         dom_col_hsv = pixel_list_to_hsv(dom_col)
         stack.append([track, dom_col_hsv])
 
